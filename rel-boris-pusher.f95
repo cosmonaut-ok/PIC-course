@@ -7,28 +7,31 @@ program pmove
     !parameters
     integer, parameter :: n=20000
     double precision, parameter :: dt=1e-3, q=1, m=1, c=1
-    double precision, parameter :: r0(3)=(/0,0,0/), v0(3)=(/-1,0,0/)
+    double precision, parameter :: r0(3)=(/0.,0.,0./), u0(3)=(/0.5,0.,0./) !u will be real velocity
     !variables
-    double precision, dimension(n,3) :: r,v
-    double precision, dimension(3) :: vm,vp,vs,s,t
+    double precision, dimension(n,3) :: r,v,u
+    double precision, dimension(3) :: vm,vp,vs,s,t,gf
     integer i
     
     !set initial conditions
     r(1,:)=r0
-    v(1,:)=v0 !v(i) is going to be v_{n-1/2}
+    u(1,:)=u0
+    v(1,:)=u0/sqrt(1-scalp(u0,u0)) !v(i) is going to be v_{n-1/2}
     !open file
     open(2,file="pmove.dat")
     !main loop
     do i = 1,n-1
         vm=v(i,:)+(q/m*dt/2)*E(r(i,:))
-        t=(q*dt/(2*m*c))*B(r(i,:))
+        gf=sqrt(1+scalp(vm,vm))
+        t=(q*dt/(2*m*c*gf))*B(r(i,:))
         vs=vm+vecp(vm, t)
         s=2/(1+scalp(t,t))*t
         vp=vm+vecp(vs, s)
         v(i+1,:)=vp+(q/m*dt/2)*E(r(i,:))
-        r(i+1,:)=r(i,:)+dt*v(i+1,:)
+        u(i+1,:)=v(i+1,:)/(1+scalp(v(i+1,:),v(i+1,:)))
+        r(i+1,:)=r(i,:)+dt*u(i+1,:)
         write (2,*) r(i+1,:)
-        write (*,*) r(i+1,:), sqrt(scalp(v(i+1,:),v(i+1,:)))
+        write (*,*) r(i+1,:)
     end do
     
     contains
@@ -36,13 +39,13 @@ program pmove
     function E(r)
         double precision E(3)
         double precision r(3)
-        E=(/0,0,1/)
+        E=(/0.,0.5,0./)
     end function E
     
     function B(r)
         double precision B(3)
         double precision r(3)
-        B=(/0,1,0/)
+        B=(/0,0,1/)
         !B(3)=1+r(1)
     end function B
     
