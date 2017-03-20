@@ -6,4 +6,7 @@ fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 x,y,z=genfromtxt("pmove.dat").T
 ax.plot(x,y,z)
+ax.set_xlabel("x")
+ax.set_ylabel("y")
+ax.set_zlabel("z")
 plt.show()
