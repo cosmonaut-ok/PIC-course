@@ -29,12 +29,8 @@ program field_evol
     do t = 1,nt
         !time t
         write (*,*) t
-        do i = 1,n
-            do j = 1,n
-                Ex(i,j)=Ex(i,j)+c*(Bz(i,j)-Bz(i,j-1))
-                Ey(i,j)=Ey(i,j)-c*(Bz(i,j)-Bz(i-1,j))
-            end do
-        end do
+        Ex(1:n,1:n)=Ex(1:n,1:n)+c*(Bz(1:n,1:n)-Bz(1:n,0:n-1))
+        Ey(1:n,1:n)=Ey(1:n,1:n)-c*(Bz(1:n,1:n)-Bz(0:n-1,1:n))
         !set boundaries
         Ex(0,:)=Ex(n,:)
         Ex(n+1,:)=Ex(1,:)
@@ -46,11 +42,7 @@ program field_evol
         Ey(:,n+1)=Ey(:,1)
         !time t+1/2
         write (*,*) t,"+1/2"
-        do i = 1,n
-            do j = 1,n
-                Bz(i,j)=Bz(i,j)-c*(Ex(i,j)+Ey(i+1,j)-Ex(i,j+1)-Ey(i,j))
-            end do
-        end do
+        Bz(1:n,1:n)=Bz(1:n,1:n)-c*(Ex(1:n,1:n)+Ey(2:n+1,1:n)-Ex(1:n,2:n+1)-Ey(1:n,1:n))
         !set boundaries
         Bz(0,:)=Bz(n,:)
         Bz(n+1,:)=Bz(1,:)
