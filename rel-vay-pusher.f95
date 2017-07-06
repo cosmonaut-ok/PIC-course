@@ -4,10 +4,12 @@
 program pmove
 
     implicit none
+    !for drift test
+    double precision, parameter :: beta=.9d0
     !parameters
     integer, parameter :: n=20000
-    double precision, parameter :: dt=1e-3, q=1, m=1, c=1
-    double precision, parameter :: r0(3)=(/0.,0.,0./), u0(3)=(/0.5,0.,0./) !u will be real velocity
+    double precision, parameter :: dt=1d-3, q=1d0, m=1d0, c=1d0
+    double precision, parameter :: r0(3)=(/0d0,0d0,0d0/), u0(3)=(/beta,0d0,0d0/) !u will be real velocity
     !variables
     double precision, dimension(n,3) :: r,v,u
     double precision, dimension(3) :: vs,t,gf,v2,tau
@@ -24,10 +26,10 @@ program pmove
     do i = 1,n-1
         v2=v(i,:)+q*dt/(2*m)*(E(r(i,:))+vecp(u(i,:),B(r(i,:)))) !u_{i+1/2}
         vs=v2+q*dt/(2*m)*E(r(i,:)) !u'
-        tau=q*dt/(2*m)*B(r(i,:))
+        tau=q*dt/(2*m*c)*B(r(i,:))
         vss=scalp(vs,tau) !u*
-        sigma=1+scalp(vs,vs)-scalp(tau,tau)
-        gf=sqrt((sigma+sqrt(sigma*sigma+4*(scalp(tau,tau)+vss*vss)))/2) !gamma_{i+1}
+        sigma=1+scalp(vs,vs)/c/c-scalp(tau,tau)
+        gf=sqrt((sigma+sqrt(sigma*sigma+4*(scalp(tau,tau)/c/c+vss*vss/c/c)))/2) !gamma_{i+1}
         t=tau/gf
         s=1/(1+scalp(t,t))
         v(i+1,:)=s*(vs+scalp(vs,t)*t+vecp(vs,t)) !u_{i+1}
@@ -42,14 +44,13 @@ program pmove
     function E(r)
         double precision E(3)
         double precision r(3)
-        E=(/0.,0.5,0./)
+        E=(/0d0,beta,0d0/)
     end function E
     
     function B(r)
         double precision B(3)
         double precision r(3)
-        B=(/0,0,1/)
-        !B(3)=1+r(1)
+        B=(/0d0,0d0,1d0/)
     end function B
     
     function vecp(a,b)
