@@ -1,5 +1,5 @@
 !2d electromagnetic field evolution, no сharge and current
-program field_evol
+program field_evol_2d
     
     implicit none
     !parameters
@@ -51,13 +51,13 @@ program field_evol
     end do
     
     !output
-    open(2,file="field_evol_Ex.dat")
-    open(3,file="field_evol_Ey.dat")
-    open(4,file="field_evol_Bz.dat")
+    open(2,file="field-evol-Ex.dat")
+    open(3,file="field-evol-Ey.dat")
+    open(4,file="field-evol-Bz.dat")
     do i=1,n
         write (2,*) Ex(i,1:n)
         write (3,*) Ey(i,1:n)
         write (4,*) Bz(i,1:n)
     end do
     
-end program field_evol
+end program
