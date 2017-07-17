@@ -4,23 +4,24 @@ program field_evol_2d
     implicit none
     !parameters
     integer, parameter :: n=200,nt=200
-    double precision, parameter :: dt=1d0,dx=1d0,dy=1d0,c=.4d0,k1x=5d-3,k1y=0d0
+    double precision, parameter :: dt=1d0,dx=1d0,dy=1d0,c=.4d0,k1x=5d-3,k1y=1d-2
     !variables
-    double precision pi,omega,kx,ky
+    double precision pi,omega,k,kx,ky
     double precision, dimension(0:n+1,0:n+1) :: Ex,Ey,Bz!,Exo,Eyo,Bzo
     integer i,j,t
     
     pi=acos(-1d0)
     kx=2*pi*k1x
     ky=2*pi*k1y
-    omega=c*sqrt(kx*kx+ky*ky)
+    k=sqrt(kx*kx+ky*ky)
+    omega=c*k
     
     !initial field setting
     t=0
     do i = 0,n+1
         do j = 0,n+1
-            Ex(i,j)=0 !Ex^t_{i+1/2,j}
-            Ey(i,j)=cos(kx*i+ky*j-omega*t) !Ey^t_{i,j+1/2}
+            Ex(i,j)=-ky/k*cos(kx*i+ky*j-omega*t) !Ex^t_{i+1/2,j}
+            Ey(i,j)=kx/k*cos(kx*i+ky*j-omega*t) !Ey^t_{i,j+1/2}
             Bz(i,j)=cos(kx*(i+.5d0)+ky*j-omega*(t+.5d0)) !Bz^{t+1/2}_{i+1/2,j+1/2}
         end do
     end do
