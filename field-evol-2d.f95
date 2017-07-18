@@ -3,17 +3,17 @@ program field_evol_2d
     
     implicit none
     !parameters
-    integer, parameter :: n=200,nt=200
-    double precision, parameter :: dt=1d0,dx=1d0,dy=1d0,c=.4d0,k1x=5d-3,k1y=1d-2
+    integer, parameter :: n=200,nt=200,nx=1,ny=2
+    double precision, parameter :: dt=1d0,dx=1d0,dy=1d0,c=.4d0
     !variables
     double precision pi,omega,k,kx,ky
     double precision, dimension(0:n+1,0:n+1) :: Ex,Ey,Bz!,Exo,Eyo,Bzo
     integer i,j,t
     
     pi=acos(-1d0)
-    kx=2*pi*k1x
-    ky=2*pi*k1y
-    k=sqrt(kx*kx+ky*ky)
+    kx=2*pi*nx/n
+    ky=2*pi*ny/n
+    k=hypot(kx,ky)
     omega=c*k
     
     !initial field setting
