@@ -1,5 +1,5 @@
 !Simple particle moving program using external E and B distribution
-!implies relativistci Boris pusher
+!implies relativistic Vay pusher with some model NS fields
 
 program pmove
 
