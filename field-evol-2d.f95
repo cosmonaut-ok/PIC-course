@@ -30,8 +30,8 @@ program field_evol_2d
     do t = 1,nt
         !time t
         write (*,*) t
-        Ex(1:n,1:n)=Ex(1:n,1:n)+c*(Bz(1:n,1:n)-Bz(1:n,0:n-1))
-        Ey(1:n,1:n)=Ey(1:n,1:n)-c*(Bz(1:n,1:n)-Bz(0:n-1,1:n))
+        Ex(1:n,1:n)=Ex(1:n,1:n)+c*dt*(Bz(1:n,1:n)-Bz(1:n,0:n-1))/dy
+        Ey(1:n,1:n)=Ey(1:n,1:n)-c*dt*(Bz(1:n,1:n)-Bz(0:n-1,1:n))/dx
         !set boundaries
         Ex(0,:)=Ex(n,:)
         Ex(n+1,:)=Ex(1,:)
@@ -43,7 +43,7 @@ program field_evol_2d
         Ey(:,n+1)=Ey(:,1)
         !time t+1/2
         write (*,*) t,"+1/2"
-        Bz(1:n,1:n)=Bz(1:n,1:n)-c*(Ex(1:n,1:n)+Ey(2:n+1,1:n)-Ex(1:n,2:n+1)-Ey(1:n,1:n))
+        Bz(1:n,1:n)=Bz(1:n,1:n)-c*dt*(Ex(1:n,1:n)*dx+Ey(2:n+1,1:n)*dy-Ex(1:n,2:n+1)*dx-Ey(1:n,1:n)*dy)/dx/dy
         !set boundaries
         Bz(0,:)=Bz(n,:)
         Bz(n+1,:)=Bz(1,:)

@@ -12,7 +12,8 @@ program pmove
     double precision, parameter :: r0(3)=(/0d0,0d0,0d0/), u0(3)=(/beta,0d0,0d0/) !u will be real velocity
     !variables
     double precision, dimension(n,3) :: r,v,u
-    double precision, dimension(3) :: vm,vp,vs,s,t,gf
+    double precision, dimension(3) :: vm,vp,vs,s,t
+    double precision gf
     integer i
     
     !set initial conditions
