@@ -1,5 +1,5 @@
 !Particle in cell code with Yee mesh for fields, Boris particle pusher and periodic BC
-!not finished yet, things to do: solve the problem of particles crossing the boundary and generate initial particles/fields
+!not finished yet, thing to do is generate initial particles/fields
 program pic_2d
     
     implicit none
@@ -17,8 +17,7 @@ program pic_2d
     integer t, i, j, k, i1, j1, i2, j2
     double precision pi, wx, wy, gf, x1, y1, x2, y2, xr, yr, wx1, wx2, wy1, wy2, fx1, fx2, fy1, fy2
     double precision, dimension(3) :: E,B, vm, vp, vs, tt, s
-    double precision, dimension(0:n+1,0:n+1) :: Ex,Ey,Bz
-    double precision, dimension(n,n) :: Jx, Jy
+    double precision, dimension(0:n+1,0:n+1) :: Ex,Ey,Bz, Jx, Jy
     type(part) p(np)
     
     !Important note
@@ -50,6 +49,9 @@ program pic_2d
         Bz(n+1,:)=Bz(1,:)
         Bz(:,0)=Bz(:,n)
         Bz(:,n+1)=Bz(:,1)
+        !clear currents
+        Jx=0
+        Jy=0
         do k = 1, np
             !interpolate fields to particle
             E(3)=0
@@ -101,15 +103,26 @@ program pic_2d
             Wx2=(x2+xr)/2/dx-i2
             Wy2=(y2+yr)/2/dy-j2
             !finally interpolate current
-            Jx(i1,j1)=Fx1*(1-Wy1)/dx/dy
-            Jx(i2,j2)=Fx2*(1-Wy2)/dx/dy
-            Jy(i1,j1)=Fy1*(1-Wx1)/dx/dy
-            Jy(i2,j2)=Fy2*(1-Wx2)/dx/dy
-            Jx(i1,j1+1)=Fx1*Wy1/dx/dy
-            Jy(i1+1,j1)=Fy1*Wx1/dx/dy
-            Jx(i2,j2+1)=Fx2*Wy2/dx/dy
-            Jy(i2+1,j2)=Fy2*Wx2/dx/dy
+            Jx(i1,j1)=Jx(i1,j1)+Fx1*(1-Wy1)/dx/dy
+            Jx(i2,j2)=Jx(i2,j2)+Fx2*(1-Wy2)/dx/dy
+            Jy(i1,j1)=Jy(i1,j1)+Fy1*(1-Wx1)/dx/dy
+            Jy(i2,j2)=Jy(i2,j2)+Fy2*(1-Wx2)/dx/dy
+            Jx(i1,j1+1)=Jx(i1,j1+1)+Fx1*Wy1/dx/dy
+            Jy(i1+1,j1)=Jy(i1+1,j1)+Fy1*Wx1/dx/dy
+            Jx(i2,j2+1)=Jx(i2,j2+1)+Fx2*Wy2/dx/dy
+            Jy(i2+1,j2)=Jy(i2+1,j2)+Fy2*Wx2/dx/dy
+            !move particles crossing outer boundary
+            p(k)%r=modulo(p(k)%r-1,float(n-1))+1
         end do
+        !add boundaries
+        Jx(n,:)=Jx(n,:)+Jx(0,:)
+        Jx(1,:)=Jx(1,:)+Jx(n+1,:)
+        Jx(:,n)=Jx(:,n)+Jx(:,0)
+        Jx(:,1)=Jx(:,1)+Jx(:,n+1)
+        Jy(n,:)=Jy(n,:)+Jy(0,:)
+        Jy(1,:)=Jy(1,:)+Jy(n+1,:)
+        Jy(:,n)=Jy(:,n)+Jy(:,0)
+        Jy(:,1)=Jy(:,1)+Jy(:,n+1)
         !one more half-move B
         Bz(1:n,1:n)=Bz(1:n,1:n)-c*dt/2*(Ex(1:n,1:n)*dx+Ey(2:n+1,1:n)*dy-Ex(1:n,2:n+1)*dx-Ey(1:n,1:n)*dy)/dx/dy
         !set boundaries
@@ -118,8 +131,8 @@ program pic_2d
         Bz(:,0)=Bz(:,n)
         Bz(:,n+1)=Bz(:,1)
         !move E
-        Ex(1:n,1:n)=Ex(1:n,1:n)+c*(Bz(1:n,1:n)-Bz(1:n,0:n-1))-4*pi*Jx
-        Ey(1:n,1:n)=Ey(1:n,1:n)-c*(Bz(1:n,1:n)-Bz(0:n-1,1:n))-4*pi*Jy
+        Ex(1:n,1:n)=Ex(1:n,1:n)+c*dt*(Bz(1:n,1:n)-Bz(1:n,0:n-1))-4*pi*Jx(1:n,1:n)*dt
+        Ey(1:n,1:n)=Ey(1:n,1:n)-c*dt*(Bz(1:n,1:n)-Bz(0:n-1,1:n))-4*pi*Jy(1:n,1:n)*dt
         !set boundaries
         Ex(0,:)=Ex(n,:)
         Ex(n+1,:)=Ex(1,:)
