@@ -1,5 +1,6 @@
 !Particle in cell code with Yee mesh for fields, Boris particle pusher and periodic BC
 !not finished yet, thing to do is generate initial particles/fields
+!not relativistic stream test
 program pic_2d
     
     implicit none
@@ -10,15 +11,18 @@ program pic_2d
     end type part
     
     ! parameters
-    integer, parameter :: n=101, nt=100, ppc=10, np=(n-1)*(n-1)*ppc
-    double precision, parameter :: dt=1d0, dx=1d0, dy=1d0, c=.4d0, qe=1d0, me=1d0
+    integer, parameter :: n=100, nt=100, ppc=10, np=n*n*ppc !grid size, number of timesteps, particles per cell and number of particles
+    double precision, parameter :: L=5d0, sigma=1d0, qm=1d0 !L=Debay radius/dx, sigma is magnetisation parameter (not used yet), qm is charge-mass ratio
+    double precision, parameter :: dt=1d0, dx=1d0, dy=1d0, c=.4d0
+    double precision, parameter :: vth=.2d0*c, vst=.1d0*c !thermal and stream velocities
+    double precision qe, me
     
     ! variables
     integer t, i, j, k, i1, j1, i2, j2
-    double precision pi, wx, wy, gf, x1, y1, x2, y2, xr, yr, wx1, wx2, wy1, wy2, fx1, fx2, fy1, fy2
+    double precision pi, wx, wy, gf, x1, y1, x2, y2, xr, yr, wx1, wx2, wy1, wy2, fx1, fx2, fy1, fy2, rn(4)
     double precision, dimension(3) :: E,B, vm, vp, vs, tt, s
     double precision, dimension(0:n+1,0:n+1) :: Ex,Ey,Bz, Jx, Jy
-    type(part) p(np)
+    type(part) p(2*np)
     
     !Important note
     !Ex_{i+1/2,j} for Ex(i,j)
@@ -26,19 +30,39 @@ program pic_2d
     !Bz_{i+1/2,j+1/2} for Bz(i,j), initially retarded by 1/2 in time
     
     pi=acos(-1d0)
+    qe=c*c/(L*L*4*pi*ppc)
+    me=qe/qm
+    call random_seed()
     ! generate particles
-    do k = 1, n
+    ! positrons
+    do k = 1, np/2
         p(k)%q=qe
         p(k)%m=me
         ! generate positions and velocities
-        
+        call random_number(rn)
+        p(k)%r(1:2)=1+n*rn(1:2)
+        p(k)%r(3)=0
+        p(k)%v(1)=vst+vth*sqrt(-log(rn(3)))*cos(2*pi*rn(4))
+        p(k)%v(2)=vth*sqrt(-log(rn(3)))*sin(2*pi*rn(4))
+        p(k)%v(3)=0
+    end do
+    ! electrons
+    do k = np/2+1, np
+        p(k)%q=-qe
+        p(k)%m=me
+        ! generate positions and velocities
+        call random_number(rn)
+        p(k)%r(1:2)=1+n*rn(1:2)
+        p(k)%r(3)=0
+        p(k)%v(1)=-vst+vth*sqrt(-log(rn(3)))*cos(2*pi*rn(4))
+        p(k)%v(2)=vth*sqrt(-log(rn(3)))*sin(2*pi*rn(4))
+        p(k)%v(3)=0
     end do
     ! generate fields
-    do i = 1, n
-        do j = 1, n
-            
-        end do
-    end do
+    !now just zeros
+    Ex=0
+    Ey=0
+    Bz=0
     
     ! main loop
     do t = 1, nt
@@ -112,7 +136,7 @@ program pic_2d
             Jx(i2,j2+1)=Jx(i2,j2+1)+Fx2*Wy2/dx/dy
             Jy(i2+1,j2)=Jy(i2+1,j2)+Fy2*Wx2/dx/dy
             !move particles crossing outer boundary
-            p(k)%r=modulo(p(k)%r-1,float(n-1))+1
+            p(k)%r=modulo(p(k)%r-1,float(n))+1
         end do
         !add boundaries
         Jx(n,:)=Jx(n,:)+Jx(0,:)
@@ -143,6 +167,9 @@ program pic_2d
         Ey(:,0)=Ey(:,n)
         Ey(:,n+1)=Ey(:,1)
     end do
+    
+    !some outputs
+    print *,bz
     
     contains
     
