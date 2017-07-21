@@ -11,7 +11,7 @@ program pic_2d
     end type part
     
     ! parameters
-    integer, parameter :: n=100, nt=100, ppc=10, np=n*n*ppc !grid size, number of timesteps, particles per cell and number of particles
+    integer, parameter :: n=100, nt=1000, ppc=10, np=n*n*ppc !grid size, number of timesteps, particles per cell and number of particles
     double precision, parameter :: L=5d0, sigma=1d0, qm=1d0 !L=Debay radius/dx, sigma is magnetisation parameter (not used yet), qm is charge-mass ratio
     double precision, parameter :: dt=1d0, dx=1d0, dy=1d0, c=.4d0
     double precision, parameter :: vth=.2d0*c, vst=.1d0*c !thermal and stream velocities
@@ -45,6 +45,7 @@ program pic_2d
         p(k)%v(1)=vst+vth*sqrt(-log(rn(3)))*cos(2*pi*rn(4))
         p(k)%v(2)=vth*sqrt(-log(rn(3)))*sin(2*pi*rn(4))
         p(k)%v(3)=0
+        p(k)%u=p(k)%v/sqrt(1+scalp(p(k)%v,p(k)%v)/c/c)
     end do
     ! electrons
     do k = np/2+1, np
@@ -169,7 +170,16 @@ program pic_2d
     end do
     
     !some outputs
-    print *,bz
+    !positrons
+    open(2,file="stream-positrons.dat")
+    do k = 1, np/2
+        write (2,*) p(k)%r(1:2), p(k)%u(1:2)
+    end do
+    !electrons
+    open(3,file="stream-electrons.dat")
+    do k = np/2+1, np
+        write (3,*) p(k)%r(1:2), p(k)%u(1:2)
+    end do
     
     contains
     
